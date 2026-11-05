@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Embedded Mini Browser</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#10131a;color:#eef2f8;font:15px/1.45 system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column}header{padding:18px clamp(12px,2vw,24px);background:#191e29;border-bottom:1px solid #303747}.brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}.icon{width:32px;height:32px;border-radius:10px;background:#6c7cff;display:grid;place-items:center}h1{font-size:17px;margin:0}.bar{display:flex;gap:8px}input{min-width:0;flex:1;padding:10px 13px;border:1px solid #3a4355;border-radius:9px;background:#10141d;color:white;font:inherit}button{padding:9px 15px;border:0;border-radius:9px;background:#6c7cff;color:white;font:600 14px system-ui,sans-serif;cursor:pointer}.secondary{background:#30394a}.hint,.status{color:#aab4c5;font-size:12px}.hint{margin-top:8px}.status{padding:8px 16px;min-height:34px}main{flex:1;min-height:0;padding:0 12px 12px}.frame{height:100%;min-height:320px;background:#fff;border:1px solid #303747;border-radius:10px;overflow:hidden}iframe{width:100%;height:100%;min-height:320px;border:0;background:white}.welcome{height:100%;min-height:320px;display:grid;place-content:center;padding:24px;text-align:center;color:#202838}.welcome p{max-width:540px;color:#526071}@media(max-width:620px){.bar{flex-wrap:wrap}.bar input{flex-basis:100%}.bar button{flex:1}}
+  </style>
+</head>
+<body>
+  <header><div class="brand"><div class="icon">◉</div><h1>Embedded Mini Browser</h1></div>
+    <form class="bar" id="form"><input id="address" placeholder="Enter a website address or search" autocomplete="off" aria-label="Website address"><button type="submit">Go</button><button class="secondary" type="button" id="restart">Restart</button></form>
+    <div class="hint">Some websites block embedded viewing. Restart clears this page’s saved data and closes the current page.</div>
+  </header>
+  <div class="status" id="status" role="status">Ready.</div>
+  <main><div class="frame"><div class="welcome" id="welcome"><div><h2>Ready to browse</h2><p>Enter a web address above. If the website blocks embedded viewing, it cannot be displayed inside this page.</p></div></div><iframe id="view" title="Website" hidden referrerpolicy="no-referrer"></iframe></div></main>
+  <script>
+    const form=document.getElementById('form'),address=document.getElementById('address'),view=document.getElementById('view'),welcome=document.getElementById('welcome'),status=document.getElementById('status');
+    function resolveAddress(input){const text=input.trim();if(!text)return '';if(/^https?:\/\//i.test(text)){try{return new URL(text).href}catch{return null}}if(/^[^\s./]+(?:\.[^\s./]+)+(?:\/|\?|#|$)/i.test(text)){try{return new URL('https://'+text).href}catch{return null}}return 'https://www.google.com/search?q='+encodeURIComponent(text)}
+    form.addEventListener('submit',e=>{e.preventDefault();const url=resolveAddress(address.value);if(url===null){status.textContent='Invalid address. Check it and try again.';return}if(!url){status.textContent='Enter a website address or search phrase.';return}address.value=url;view.hidden=false;welcome.hidden=true;view.src=url;status.textContent='Loading inside this page: '+url});
+    document.getElementById('restart').addEventListener('click',async()=>{address.value='';view.src='about:blank';view.hidden=true;welcome.hidden=false;try{localStorage.clear();sessionStorage.clear();if('caches'in window)for(const key of await caches.keys())await caches.delete(key);if('indexedDB'in window&&indexedDB.databases)for(const db of await indexedDB.databases())if(db.name)indexedDB.deleteDatabase(db.name)}catch{}status.textContent='Restarted. This page’s saved data was cleared.'});
+  </script>
+</body>
+</html>
